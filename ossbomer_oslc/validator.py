@@ -15,17 +15,27 @@ class LicenseValidator:
         except (FileNotFoundError, json.JSONDecodeError):
             raise ValueError("Invalid or missing license rules file.")
 
+    def extract_license_id(self, component):
+        licenses = component.get("licenses", [])
+        if isinstance(licenses, list):
+            return [entry["license"].get("id") for entry in licenses if "license" in entry and "id" in entry["license"]]
+        return []
+
     def validate(self, sbom_data):
         results = {}
         for component in sbom_data.get("components", []):
-            license_id = component.get("license", "")
-            license_entry = next((l for l in self.licenses if l["spdx_id"] == license_id or license_id in l.get("aliases", [])), None)
+            license_ids = self.extract_license_id(component)
             issues = []
-
-            if not license_entry:
-                issues.append(f"No guidance available for license '{license_id}'")
-            elif not license_entry.get("use_case", {}).get(self.use_case, True):
-                issues.append(f"License '{license_id}' is not allowed for {self.use_case}")
+            
+            if not license_ids:
+                issues.append("No license found for this component")
+            else:
+                for license_id in license_ids:
+                    license_entry = next((l for l in self.licenses if l["spdx_id"] == license_id or license_id in l.get("aliases", [])), None)
+                    if not license_entry:
+                        issues.append(f"No guidance available for license '{license_id}'")
+                    elif not license_entry.get("use_case", {}).get(self.use_case, True):
+                        issues.append(f"License '{license_id}' is not allowed for {self.use_case}")
             
             if issues:
                 results[component["name"]] = issues
@@ -37,6 +47,14 @@ class PackageRiskAnalyzer:
         self.min_severity = min_severity
         self.severity_levels = {"Informational": 1, "Low": 2, "Medium": 3, "High": 4, "Critical": 5}
         self.risk_data = self.load_risk_data()
+
+    def extract_hashes(self, component):
+        hashes = {}
+        for key in ["hashes", "hashSourceCodeComponent"]:
+            for hash_entry in component.get(key, []):
+                if "alg" in hash_entry and "content" in hash_entry:
+                    hashes[hash_entry["alg"].lower()] = hash_entry["content"]
+        return hashes
 
     def load_risk_data(self):
         risk_data = {}
@@ -70,7 +88,7 @@ class PackageRiskAnalyzer:
         results = {}
         for component in sbom_data.get("components", []):
             purl = component.get("purl", "")
-            component_hashes = component.get("hashes", {})
+            component_hashes = self.extract_hashes(component)
             risk_entries = []
             seen_hashes = set()
             
