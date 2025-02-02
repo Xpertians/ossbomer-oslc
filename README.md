@@ -49,8 +49,9 @@ print("Package Risks:", risk_results)
 
 ## Usage
 
-License Rules (license_rules.json):
+### License Rules (license_rules.json):
 Defines which licenses are allowed or restricted for different use cases (internal, distribution).
+
 ```
 {
     "licenses": [
@@ -78,8 +79,8 @@ Defines which licenses are allowed or restricted for different use cases (intern
 }
 ```
 
-OSSA Risk Data (ossa_data/*.json)
-you can find more information in the OpenSourceSoftwareAdvisory website:
+### OSSA Risk Data (ossa_data/*.json):
+You can find more information in the [Open Source Software Advisory website](https://github.com/Xpertians/OpenSourceAdvisoryDatabase)
 
 
 ### License
