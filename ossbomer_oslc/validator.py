@@ -27,7 +27,8 @@ class LicenseValidator:
             elif not license_entry.get("use_case", {}).get(self.use_case, True):
                 issues.append(f"License '{license_id}' is not allowed for {self.use_case}")
             
-            results[component["name"]] = issues if issues else []
+            if issues:
+                results[component["name"]] = issues
         return results
 
 class PackageRiskAnalyzer:
@@ -71,6 +72,7 @@ class PackageRiskAnalyzer:
             purl = component.get("purl", "")
             component_hashes = component.get("hashes", {})
             risk_entries = []
+            seen_hashes = set()
             
             if purl in self.risk_data:
                 risk_entries.extend(self.risk_data[purl])
@@ -80,12 +82,21 @@ class PackageRiskAnalyzer:
                     risk_entries.extend(entries)
                 
             for hash_type, hash_value in component_hashes.items():
-                if hash_value in self.risk_data:
+                if hash_value in self.risk_data and hash_value not in seen_hashes:
                     risk_entries.extend(self.risk_data[hash_value])
+                    seen_hashes.add(hash_value)
             
             if self.min_severity:
                 risk_entries = [entry for entry in risk_entries if self.severity_levels.get(entry["severity"], 0) >= self.severity_levels.get(self.min_severity, 0)]
             
-            if risk_entries:
-                results[component["name"]] = risk_entries
+            unique_risk_entries = []
+            seen_entries = set()
+            for entry in risk_entries:
+                entry_key = (entry["severity"], entry["title"], entry["id"])
+                if entry_key not in seen_entries:
+                    unique_risk_entries.append(entry)
+                    seen_entries.add(entry_key)
+            
+            if unique_risk_entries:
+                results[component["name"]] = unique_risk_entries
         return results
