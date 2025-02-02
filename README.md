@@ -47,7 +47,7 @@ print("License Issues:", license_results)
 print("Package Risks:", risk_results)
 ```
 
-## Usage
+## Customization
 
 ### License Rules:
 Defines which licenses are allowed or restricted for different use cases (internal, distribution, or any other use case you have).
