@@ -1,0 +1,2 @@
+include ossbomer_oslc/license_rules.json
+recursive-include ossbomer_oslc/ossa_data *.json

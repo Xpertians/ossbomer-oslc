@@ -1,0 +1,91 @@
+import json
+import os
+import re
+
+class LicenseValidator:
+    def __init__(self, license_file, use_case="distribution"):
+        self.license_file = license_file
+        self.use_case = use_case
+        self.licenses = self.load_licenses()
+
+    def load_licenses(self):
+        try:
+            with open(self.license_file, "r") as f:
+                return json.load(f).get("licenses", [])
+        except (FileNotFoundError, json.JSONDecodeError):
+            raise ValueError("Invalid or missing license rules file.")
+
+    def validate(self, sbom_data):
+        results = {}
+        for component in sbom_data.get("components", []):
+            license_id = component.get("license", "")
+            license_entry = next((l for l in self.licenses if l["spdx_id"] == license_id or license_id in l.get("aliases", [])), None)
+            issues = []
+
+            if not license_entry:
+                issues.append(f"No guidance available for license '{license_id}'")
+            elif not license_entry.get("use_case", {}).get(self.use_case, True):
+                issues.append(f"License '{license_id}' is not allowed for {self.use_case}")
+            
+            results[component["name"]] = issues if issues else []
+        return results
+
+class PackageRiskAnalyzer:
+    def __init__(self, ossa_folder, min_severity=None):
+        self.ossa_folder = ossa_folder
+        self.min_severity = min_severity
+        self.severity_levels = {"Informational": 1, "Low": 2, "Medium": 3, "High": 4, "Critical": 5}
+        self.risk_data = self.load_risk_data()
+
+    def load_risk_data(self):
+        risk_data = {}
+        for file in os.listdir(self.ossa_folder):
+            if file.endswith(".json"):
+                try:
+                    with open(os.path.join(self.ossa_folder, file), "r") as f:
+                        ossa_entry = json.load(f)
+                        severity = ossa_entry.get("severity", "Unknown")
+                        title = ossa_entry.get("title", "Unknown Title")
+                        ossa_id = ossa_entry.get("id", "Unknown ID")
+                        
+                        entry = {"severity": severity, "title": title, "id": ossa_id, "match_type": "direct"}
+                        
+                        for purl in ossa_entry.get("purls", []):
+                            risk_data.setdefault(purl, []).append(entry)
+                        for regex in ossa_entry.get("regex", []):
+                            regex_entry = entry.copy()
+                            regex_entry["match_type"] = "regex"
+                            risk_data.setdefault(re.compile(regex), []).append(regex_entry)
+                        for artifact in ossa_entry.get("artifacts", []):
+                            for hash_type, hash_value in artifact.get("hashes", {}).items():
+                                hash_entry = entry.copy()
+                                hash_entry["match_type"] = "hash"
+                                risk_data.setdefault(hash_value, []).append(hash_entry)
+                except json.JSONDecodeError:
+                    continue
+        return risk_data
+
+    def analyze(self, sbom_data):
+        results = {}
+        for component in sbom_data.get("components", []):
+            purl = component.get("purl", "")
+            component_hashes = component.get("hashes", {})
+            risk_entries = []
+            
+            if purl in self.risk_data:
+                risk_entries.extend(self.risk_data[purl])
+                
+            for regex_pattern, entries in self.risk_data.items():
+                if isinstance(regex_pattern, re.Pattern) and regex_pattern.match(purl):
+                    risk_entries.extend(entries)
+                
+            for hash_type, hash_value in component_hashes.items():
+                if hash_value in self.risk_data:
+                    risk_entries.extend(self.risk_data[hash_value])
+            
+            if self.min_severity:
+                risk_entries = [entry for entry in risk_entries if self.severity_levels.get(entry["severity"], 0) >= self.severity_levels.get(self.min_severity, 0)]
+            
+            if risk_entries:
+                results[component["name"]] = risk_entries
+        return results

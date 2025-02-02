@@ -1,0 +1,54 @@
+{
+    "components": [
+        {
+            "name": "openssl",
+            "version": "1.1.1k",
+            "license": "OpenSSL",
+            "purl": "pkg:rpm/fedora/openssl@1.1.1k",
+            "hashes": {
+                "sha1": "b8f8f8a2935fd4e7c8a6b3a4f2f4b9cd9d4c8b5a",
+                "sha256": "e2fc714c4727ee9395f324cd2e7f331f23215e4d4c4d4d8b8c8b8f8f8f8f8f8f"
+            }
+        },
+        {
+            "name": "cyrus-sasl-ldap",
+            "version": "2.1.26",
+            "license": "GPL-3.0",
+            "purl": "pkg:rpm/amzn/cyrus-sasl-ldap@2.1.26",
+            "hashes": {
+                "sha1": "c9e6848d9cc6f9588e0e7a75423f9a3aed3f10db",
+                "sha256": "532e830fa8a2d9627dd4ab7dbd9af33e39d5928a00d33f08cc6e246b5f032fb2"
+            }
+        },
+        {
+            "name": "curl",
+            "version": "7.76.1",
+            "license": "MIT",
+            "purl": "pkg:rpm/fedora/curl@7.76.1",
+            "hashes": {
+                "sha1": "ad18a79a69d2d3ad128a6d98a3215f6bb06e39a2",
+                "sha256": "f3b8e9a5d6f1a1c1d1e9d4b4b8a6a5d1e9c8a5f3a8d6c1a5e9a6b8f3a5d6e1c9"
+            }
+        },
+        {
+            "name": "log4j",
+            "version": "2.14.1",
+            "license": "Apache-2.0",
+            "purl": "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1",
+            "hashes": {
+                "sha1": "d5b8a8b9d3f1a4e9a5d6c8b4a8f1e9c3d5b8a9a4",
+                "sha256": "c5b8a9f1e9d4a5d6c8b4a8f1e9c3d5b8a9a4d3f1a4e9a5d6c8b4a8f1e9c3d5b8"
+            }
+        },
+        {
+            "name": "nginx",
+            "version": "1.20.0",
+            "license": "BSD-2-Clause",
+            "purl": "pkg:generic/nginx@1.20.0",
+            "hashes": {
+                "sha1": "a5d6c8b4a8f1e9c3d5b8a9a4d3f1a4e9a5d6c8b4",
+                "sha256": "b5d6c8b4a8f1e9c3d5b8a9a4d3f1a4e9a5d6c8b4a8f1e9c3d5b8a9a4d3f1a4e9"
+            }
+        }
+    ]
+}
